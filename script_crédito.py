@@ -153,13 +153,8 @@ class RPACrédito:
         * ===
         """
 
-        # ~~ Path do profile.
-        CaminhoScript = os.path.abspath(__file__)
-        CaminhoPerfil = CaminhoScript.split(r"script_crédito.py")[0] + r"\profile"
-
         # ~~ Definindo configurações.
         Options = opt()
-        Options.add_argument(f"user-data-dir={CaminhoPerfil}")
         Options.add_argument("--log-level=3")
         Options.add_experimental_option("excludeSwitches", ["enable-logging"])
         Options.add_experimental_option("detach", True) 
@@ -175,22 +170,32 @@ class RPACrédito:
         except:
             Driver.switch_to.window(AbasAbertas[1])
 
-        # ~~ Acessando site e fazendo login.
+        # ~~ Acessando GoDeep e fazendo login.
         Driver.get(f"https://www.revendedorpositivo.com.br/admin/")
-        LoginMicrosoftButton = None 
+        microsoft_login_botao = None
         try:
-            LoginMicrosoftButton = Driver.find_element(By.ID, value="login-ms-azure-ad") 
-            LoginMicrosoftButton.click()
-            time.sleep(5)
-            Body = Driver.find_element(By.TAG_NAME, value="body").text
-            if any(login_string in Body for login_string in ["Because you're accessing sensitive info, you need to verify your password.", "Sign in"]):
-                self.PrintarMensagem("*** Necessário logar conta Microsoft. ***", "=", 30, "bot")
-                time.sleep(60)
-            if "Approve sign in request" in Body:
-                time.sleep(2)
-                Código = Driver.find_element(By.ID, value="idRichContext_DisplaySign").text
-                self.PrintarMensagem(f"*** Necessário authenticator Microsoft para continuar: {Código} ***", "=", 30, "bot")
-                time.sleep(60)
+            microsoft_login_botao = Driver.find_element(By.ID, value="login-ms-azure-ad")
+            microsoft_login_botao.click()
+            time.sleep(3)
+            body = Driver.find_element(By.TAG_NAME, value="body").text
+            if any(login_string in body for login_string in ["Because you're accessing sensitive info, you need to verify your password.", "Sign in", "Pick an account", "Entrar"]):
+                self.PrintarMensagem("Necessário logar conta Microsoft.", "=", 50, "bot")
+                while True:
+                    body = Driver.find_element(By.TAG_NAME, value="body").text
+                    if "DASHBOARD" in body:
+                        break
+                    else:
+                        time.sleep(3)
+            if "Approve sign in request" in body:
+                time.sleep(3)
+                codigo = Driver.find_element(By.ID, value="idRichContext_DisplaySign").text
+                self.PrintarMensagem(f"Necessário authenticator Microsoft para continuar: {codigo}.", "=", 50, "bot")
+                while True:
+                    body = Driver.find_element(By.TAG_NAME, value="body").text
+                    if "DASHBOARD" in body:
+                        break
+                    else:
+                        time.sleep(3)
         except:
             Driver.get(f"https://www.revendedorpositivo.com.br/admin/index/")
 
